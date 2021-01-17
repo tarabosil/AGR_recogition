@@ -49,7 +49,7 @@ class Evaluator:
 
         plt.bar([0,1], [genders.count('0'), genders.count('1')], color=['lightskyblue', 'orchid'])
         plt.xticks([0,1], ['Male', 'Women'])
-        plt.title('Male / Women')
+        plt.title('Gender distribution')
         plt.show()
 
     def plot_race_barchart(self, races):
@@ -59,6 +59,16 @@ class Evaluator:
 
         plt.bar([0, 1, 2, 3, 4], [races.count('0'), races.count('1'), races.count('2'), races.count('3'), races.count('4')], color=colors)
         plt.xticks([0, 1, 2, 3, 4], ['White', 'Black', 'Asian', 'Indian', 'Others'])
-        plt.title('Male / Women')
+        plt.title('Race distribution')
+        plt.show()
+
+    def plot_age_barchart(self, ages):
+
+        plt.figure()
+        colors = ['lightskyblue', 'orchid', 'royalblue', 'mediumspringgreen', 'hotpink', 'limegreen']
+
+        plt.bar([0, 1, 2, 3, 4, 5], [ages.count(0), ages.count(1), ages.count(2), ages.count(3), ages.count(4), ages.count(5)], color=colors)
+        plt.xticks([0, 1, 2, 3, 4, 5], ['Children', 'Youth', 'Adults', 'Middle age', 'Old', 'Very old'])
+        plt.title('Age distribution')
         plt.show()
 

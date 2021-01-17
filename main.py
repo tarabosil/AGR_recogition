@@ -15,52 +15,18 @@ from sklearn.model_selection import train_test_split
 from keras.models import Model, Sequential
 from keras.layers import Conv2D, Dense, Dropout, MaxPooling2D, Flatten
 from evaluation import Evaluator
+import config
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 evaluator = Evaluator()
-
-do_training = False
-
-n = 128
-
-path = "data/UTKFace"
-type = 'age'
-
-gender_classes = {
-    0: 'Male',
-    1: 'Female'
-}
-
-race_classes = {
-    0: 'White',
-    1: 'Black',
-    2: 'Asian',
-    3: 'Indian',
-    4: 'Others'
-}
-
-num_classes = {
-    'age': 6,
-    'gender': 2,
-    'race': 5
-}
-
-age_classes = {
-    0: 'Children (1-15)',
-    1: 'Youth (15-30)',
-    2: 'Adults (30-40)',
-    3: 'Middle age (40-60)',
-    4: 'Old (60-80)',
-    5: 'Very old (> 80)'
-}
 
 
 def create_model(type):
     """ Create the model """
     model = Sequential()
 
-    model.add(Conv2D(16, kernel_size=(3, 3), activation='relu', input_shape=(n, n, 3)))
+    model.add(Conv2D(16, kernel_size=(3, 3), activation='relu', input_shape=(config.n, config.n, 3)))
     model.add(MaxPooling2D(2, 2))
 
     model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
@@ -72,7 +38,7 @@ def create_model(type):
 
     model.add(Flatten())
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(num_classes[type], activation='softmax'))
+    model.add(Dense(config.num_classes[type], activation='softmax'))
     # model.summary()
 
     return model
@@ -128,7 +94,7 @@ def train_model(type):
 
 def preprocess_data(type):
     """ Preprocess the data """
-    filenames = os.listdir(path)
+    filenames = os.listdir(config.path)
 
     genders, ages, races, X_data = [], [], [], []
 
@@ -136,8 +102,8 @@ def preprocess_data(type):
         genders.append(file.split('_')[1])
         ages.append(file.split('_')[0])
         races.append(file.split('_')[2])
-        image = cv2.imread(os.path.join(path, file))
-        X_data.append(cv2.resize(image, (n, n)))
+        image = cv2.imread(os.path.join(config.path, file))
+        X_data.append(cv2.resize(image, (config.n, config.n)))
 
     print(f"Number of men: {genders.count('0')}, number of women: {genders.count('1')}")
     evaluator.plot_gender_barchart(genders)
@@ -166,6 +132,9 @@ def preprocess_data(type):
                 y_data.append(4)
             elif 80 <= int(i):
                 y_data.append(5)
+        print(f"Children: {y_data.count(0)}, Youth: {y_data.count(1)}, Adults: {y_data.count(2)}, Middle age: {y_data.count(3)},"
+              f" Old: {y_data.count(4)}, Very old: {y_data.count(5)}")
+        evaluator.plot_age_barchart(y_data)
     y_data = np.array(y_data)
     y_data = np.expand_dims(y_data, axis=-1)
     print(y_data.shape)
@@ -209,28 +178,28 @@ def evaluate(model, type):
         # print(f"Precision: {metrics.precision_score(y_true, preds)}")
         # print(f"Recall: {metrics.recall_score(y_true, preds)}")
 
-        evaluator.multi_roc_curve(y_test, preds_multi, type, num_classes, gender_classes)
+        evaluator.multi_roc_curve(y_test, preds_multi, type, config.num_classes, config.gender_classes)
     elif type == 'race':
         preds_multi = model.predict_proba(X_test)
 
-        evaluator.multi_roc_curve(y_test, preds_multi, type, num_classes, race_classes)
+        evaluator.multi_roc_curve(y_test, preds_multi, type, config.num_classes, config.race_classes)
     elif type == 'age':
         preds_multi = model.predict_proba(X_test)
-        evaluator.multi_roc_curve(y_test, preds_multi, type, num_classes, age_classes)
+        evaluator.multi_roc_curve(y_test, preds_multi, type, config.num_classes, config.age_classes)
 
     return y_true, preds
 
 
 if __name__ == '__main__':
 
-    X_data, y_data = preprocess_data(type)
+    X_data, y_data = preprocess_data(config.type)
     X_train, y_train, X_test, y_test, X_val, y_val = split_data(X_data, y_data)
 
     # train model
-    if do_training:
-        train_model(type)
+    if config.do_training:
+        train_model(config.type)
 
     # load model
-    model = create_model(type)
-    model.load_weights(f'models/{type}_model.h5')
-    y_true, preds = evaluate(model, type)
+    model = create_model(config.type)
+    model.load_weights(f'models/{config.type}_model.h5')
+    y_true, preds = evaluate(model, config.type)
